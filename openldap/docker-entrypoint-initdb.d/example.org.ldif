@@ -1,0 +1,86 @@
+dn: dc=example,dc=org
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: example.org
+dc: example
+
+dn: ou=service users,dc=example,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: service users
+
+dn: cn=guacamole,ou=service users,dc=example,dc=org
+cn: guacamole
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+userPassword:: MTIzNDU2
+
+dn: cn=keycloak,ou=service users,dc=example,dc=org
+cn: keycloak
+objectClass: organizationalRole
+objectClass: top
+objectClass: simpleSecurityObject
+userPassword:: MTIzNDU2
+
+dn: ou=connections,dc=example,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: connections
+
+dn: cn=openssh,ou=connections,dc=example,dc=org
+objectClass: groupOfNames
+objectClass: guacConfigGroup
+objectClass: top
+cn: openssh
+guacConfigProtocol: ssh
+member: cn=user,ou=users,dc=example,dc=org
+guacConfigParameter: hostname=openssh
+
+dn: ou=groups,dc=example,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: groups
+
+dn: cn=administrators,ou=groups,dc=example,dc=org
+objectClass: groupOfNames
+objectClass: top
+cn: administrators
+member: cn=administrator,ou=users,dc=example,dc=org
+
+dn: cn=users,ou=groups,dc=example,dc=org
+objectClass: groupOfNames
+objectClass: top
+cn: users
+member: cn=user,ou=users,dc=example,dc=org
+
+dn: ou=hosts,dc=example,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: hosts
+
+dn: ou=users,dc=example,dc=org
+objectClass: organizationalUnit
+objectClass: top
+ou: users
+
+dn: cn=administrator,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+cn: administrator
+sn: Administrator
+uid: administrator
+userPassword:: MTIzNDU2
+
+dn: cn=user,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+cn: user
+sn: User
+uid: user
+userPassword:: MTIzNDU2
