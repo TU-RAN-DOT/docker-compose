@@ -1,0 +1,125 @@
+{
+  "clients": [
+    {
+      "attributes": {
+        "saml.server.signature": "true"
+      },
+      "clientId": "http://guacamole.example.org/guacamole",
+      "defaultClientScopes": [],
+      "name": "Guacamole",
+      "protocol": "saml",
+      "protocolMappers": [
+        {
+          "config": {
+            "attribute.name": "groups",
+            "full.path": "false",
+            "single": "true"
+          },
+          "consentRequired": false,
+          "name": "Group list",
+          "protocol": "saml",
+          "protocolMapper": "saml-group-membership-mapper"
+        },
+        {
+          "config": {
+            "mapper.nameid.format": "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+            "user.attribute": "username"
+          },
+          "consentRequired": false,
+          "name": "User Attribute Mapper for NameID",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-attribute-nameid-mapper"
+        }
+      ],
+      "redirectUris": [
+        "http://guacamole.example.org/guacamole/*"
+      ]
+    }
+  ],
+  "components": {
+    "org.keycloak.storage.UserStorageProvider": [
+      {
+        "config": {
+          "authType": [
+            "simple"
+          ],
+          "bindCredential": [
+            "123456"
+          ],
+          "bindDn": [
+            "cn=keycloak,ou=service users,dc=example,dc=org"
+          ],
+          "changedSyncPeriod": [
+            "60"
+          ],
+          "connectionUrl": [
+            "ldap://openldap"
+          ],
+          "editMode": [
+            "READ_ONLY"
+          ],
+          "enabled": [
+            "true"
+          ],
+          "rdnLDAPAttribute": [
+            "uid"
+          ],
+          "userObjectClasses": [
+            "inetOrgPerson, organizationalPerson"
+          ],
+          "usernameLDAPAttribute": [
+            "uid"
+          ],
+          "usersDn": [
+            "ou=users,dc=example,dc=org"
+          ],
+          "uuidLDAPAttribute": [
+            "entryUUID"
+          ],
+          "validatePasswordPolicy": [
+            "false"
+          ],
+          "vendor": [
+            "other"
+          ]
+        },
+        "name": "OpenLDAP",
+        "providerId": "ldap",
+        "subComponents": {
+          "org.keycloak.storage.ldap.mappers.LDAPStorageMapper": [
+            {
+              "config": {
+                "drop.non.existing.groups.during.sync": [
+                  "true"
+                ],
+                "groups.dn": [
+                  "ou=groups,dc=example,dc=org"
+                ],
+                "mode": [
+                  "READ_ONLY"
+                ]
+              },
+              "name": "groups",
+              "providerId": "group-ldap-mapper"
+            },
+            {
+              "config": {
+                "ldap.attribute": [
+                  "uid"
+                ],
+                "user.model.attribute": [
+                  "username"
+                ]
+              },
+              "name": "username",
+              "providerId": "user-attribute-ldap-mapper",
+              "subComponents": {}
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "enabled": true,
+  "realm": "guacamole"
+}

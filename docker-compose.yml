@@ -1,0 +1,113 @@
+---
+services:
+  guacamole:
+    environment:
+      EXTENSION_PRIORITY: "*, saml"
+      GUACD_HOSTNAME: guacd
+      LDAP_CONFIG_BASE_DN: ou=connections,dc=example,dc=org
+      LDAP_ENCRYPTION_METHOD: none
+      LDAP_GROUP_BASE_DN: ou=groups,dc=example,dc=org
+      LDAP_GROUP_SEARCH_FILTER: (objectClass=groupOfNames)
+      LDAP_HOSTNAME: openldap
+      LDAP_PORT: "389"
+      LDAP_SEARCH_BIND_DN: cn=guacamole,ou=service users,dc=example,dc=org
+      LDAP_SEARCH_BIND_PASSWORD: ${GUACAMOLE_LDAP_SEARCH_BIND_PASSWORD:?GUACAMOLE_LDAP_SEARCH_BIND_PASSWORD}
+      LDAP_USER_BASE_DN: ou=users,dc=example,dc=org
+      POSTGRES_DATABASE: guacamole
+      POSTGRES_HOSTNAME: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD}
+      POSTGRES_USER: guacamole
+      SAML_CALLBACK_URL: http://guacamole.example.org/guacamole
+      SAML_DEBUG: true
+      SAML_ENTITY_ID: http://guacamole.example.org/guacamole
+      SAML_IDP_METADATA_URL: http://keycloak:8080/realms/guacamole/protocol/saml/descriptor
+      SAML_STRICT: false
+    image: guacamole/guacamole:${GUACAMOLE_VERSION:?GUACAMOLE_VERSION}
+    networks:
+      default:
+        aliases:
+          - guacamole.example.org
+    restart: unless-stopped
+    volumes:
+      - /opt/guacamole/ldap
+      - /opt/guacamole/mysql/schema
+      - /opt/guacamole/postgresql/schema
+  guacd:
+    image: guacamole/guacd:${GUACAMOLE_VERSION:?GUACAMOLE_VERSION}
+    restart: unless-stopped
+  haproxy:
+    image: haproxy:${HAPROXY_VERSION:?HAPROXY_VERSION}
+    ports:
+      - 80:80
+    restart: unless-stopped
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+  keycloak:
+    command: start-dev --import-realm
+    depends_on:
+      - postgres
+    environment:
+      KC_DB: postgres
+      KC_DB_PASSWORD: ${POSTGRES_KEYCLOAK_PASSWORD:?POSTGRES_KEYCLOAK_PASSWORD}
+      KC_DB_USERNAME: keycloak
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_PORT: 5432
+      KC_HEALTH_ENABLED: true
+      KC_HOSTNAME: keycloak.example.org
+      KC_HOSTNAME_STRICT: false
+      KC_HTTP_ENABLED: true
+      KC_PROXY: edge
+      KEYCLOAK_LOGLEVEL: DEBUG
+      PROXY_ADDRESS_FORWARDING: true
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD}
+    image: keycloak/keycloak:${KEYCLOAK_VERSION:?KEYCLOAK_VERSION}
+    networks:
+      default:
+        aliases:
+          - keycloak.example.org
+    restart: unless-stopped
+    volumes:
+      - ./keycloak/import:/opt/keycloak/data/import:ro
+  openldap:
+    build:
+      args:
+        ALPINE_VERSION: ${ALPINE_VERSION:?ALPINE_VERSION}
+      context: openldap
+    environment:
+      DEBUG_LEVEL: shell
+    image: turandot/openldap
+    restart: unless-stopped
+    volumes:
+      - ./openldap/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    volumes_from:
+      - guacamole
+  openssh:
+    build:
+      args:
+        ALPINE_VERSION: ${ALPINE_VERSION:?ALPINE_VERSION}
+      context: openssh
+    environment:
+      PASSWORD_ROOT: ${OPENSSH_ROOT_PASSWORD:?OPENSSH_ROOT_PASSWORD}
+      PASSWORD_USER: ${OPENSSH_USER_PASSWORD:?OPENSSH_USER_PASSWORD}
+    image: turandot/openssh
+    restart: unless-stopped
+  postgres:
+    environment:
+      GUACAMOLE_CONNECTIONS: ${GUACAMOLE_CONNECTIONS:?GUACAMOLE_CONNECTIONS}
+      GUACAMOLE_GROUPS: ${GUACAMOLE_GROUPS:?GUACAMOLE_GROUPS}
+      POSTGRES_GUACAMOLE_DB: guacamole
+      POSTGRES_GUACAMOLE_PASSWORD: ${POSTGRES_GUACAMOLE_PASSWORD:?POSTGRES_GUACAMOLE_PASSWORD}
+      POSTGRES_GUACAMOLE_USER: guacamole
+      POSTGRES_HOST_AUTH_METHOD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD}
+      POSTGRES_KEYCLOAK_DB: keycloak
+      POSTGRES_KEYCLOAK_PASSWORD: ${POSTGRES_KEYCLOAK_PASSWORD:?POSTGRES_KEYCLOAK_PASSWORD}
+      POSTGRES_KEYCLOAK_USER: keycloak
+    image: postgres:${POSTGRES_VERSION:?POSTGRES_VERSION}
+    restart: unless-stopped
+    volumes:
+      - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    volumes_from:
+      - guacamole
